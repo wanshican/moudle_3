@@ -133,11 +133,11 @@ class MemoAdmin:
         '新增记录'
         name = input('name:')
         thing = input('thing:')
-        date = input('date:(示例：年/月/日 时/分/秒)')
-        date_list = date.split(' ')
-        Y, m, d = (int(x) for x in date_list[0].split('/'))
-        H, M, S = (int(x) for x in date_list[1].split('/'))
-        date = str(datetime.datetime(Y, m, d, H, M, S))
+        date = input('date:(示例：1.1)')
+        month, day = date.split('.')
+        now = datetime.datetime.now()
+        new_time = now.replace(day=int(day), month=int(month))
+        date = new_time.strftime(f'%Y-%m-%d %X')
         memo = Memo(name, thing, date)
         one = {'name': memo.name, 'thing': memo.thing, 'date': memo.date}
         self.memo_list.append(one)
