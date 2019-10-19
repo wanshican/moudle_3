@@ -2,6 +2,7 @@ import pickle
 import os
 import configparser
 import datetime
+from dateutil import parser
 
 from . import log_function
 
@@ -110,6 +111,7 @@ class MemoAdmin:
                 '4':'Query',
                 '5':'Save',
                 '6':'export_pdf',
+                '7':'返回查询数据',
                 '0':'退出'
                 }
         print('欢迎使用51备忘录'.center(50, '-'))
@@ -182,6 +184,26 @@ class MemoAdmin:
             print('暂无记录，请先添加。')
     
 
+    def query_memo(self):
+        ret = {'status': 0, 'statusText': '查询成功！', 'data':[]}
+        from_month = int(input('请输入起始月份：'))
+        to_month = int(input('请输入截止月份:'))
+        try:
+            for item in self.memo_list:
+                month = parser.parse(item['date']).month
+                if month >= from_month and month <= to_month:
+                    ret['data'].append(item)
+            if ret['data']:
+                self.log.info('成功返回json数据')
+            elif not ret['data']:
+                self.log.error('没有符合要求的记录！')
+                return
+        except Exception as e:
+            ret['status'] = 1
+            ret['statusText'] = e
+        return ret
+
+
     def save(self): 
         '保存记录'
         with open(os.path.join(BASE_DIR, 'db', f'{self.name}_memo.pkl'), 'wb') as f:
@@ -213,6 +235,8 @@ def main():
                         ma.save()
                     elif select == '6':
                         ma.export_pdf()
+                    elif select == '7':
+                        ma.query_memo()
                     elif select == '0':
                         break
                     else:
