@@ -3,6 +3,7 @@
 # author: wanshican
 
 import os
+import sys
 from PIL import Image
 from openpyxl import Workbook
 
@@ -47,6 +48,7 @@ class ImageSystem:
 
             
     def resize(self):
+        '''裁剪图像'''
         try:
             name = input('请输入要裁剪的图片名称（示例：小朋友.jpg）：')
             size = int(input('请输入要裁剪的尺寸（示例：100）：'))
@@ -58,6 +60,7 @@ class ImageSystem:
             print('未找到图片，请重试！')
 
     def rotate(self):
+        '''旋转图像'''
         try:
             name = input('请输入要旋转的图片名称（示例：小朋友.jpg）:')
             angle = int(input('请输入旋转角度（示例：90）：'))
@@ -71,9 +74,13 @@ class ImageSystem:
 
 def main():
     IS = ImageSystem()
-    # IS.save_image_info()
-    # IS.resize()
-    IS.rotate()
+    try:
+        if sys.argv[1] in {'-re', '--resize'}:
+            IS.resize()
+        elif sys.argv[1] in {'-ro', '--rotate'}:
+            IS.rotate()
+    except Exception as e:
+        print(e)
 
 if __name__ == "__main__":
     main()
