@@ -1,17 +1,10 @@
 import datetime
+import os
+import pickle
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-date = input('date:(示例：年/月/日 时/分/秒)')
-date_list = date.split(' ')
-print(date_list)
-Y, m, d = (int(x) for x in date_list[0].split('/'))
-H, M, S = (int(x) for x in date_list[1].split('/'))
-# print(type(datetime.date(Y, m, d) ))
-# print(datetime.date(Y, m, d))
-
-print(str(datetime.date(Y, m, d)))
-print(type(datetime.date(Y, m, d)))
-d = str(datetime.date(Y, m, d))
-print(d)
-print(type(d))
-# date = datetime.date(Y, m, d) + datetime.time(H, M, S)
+with open(os.path.join(BASE_DIR, 'db', 'wanshican_memo.pkl'), 'rb') as f:
+    print(os.path.join(BASE_DIR, 'db', 'wanshican_memo.pkl'))
+    memo_list = pickle.loads(f.read())
+    print(memo_list)

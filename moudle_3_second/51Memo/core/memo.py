@@ -3,6 +3,13 @@ import os
 import configparser
 import datetime
 from dateutil import parser
+import smtplib
+from smtplib import SMTP_SSL
+from email.header import Header
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.base import MIMEBase
+from email import encoders
 
 from . import log_function
 
@@ -112,6 +119,7 @@ class MemoAdmin:
                 '5':'Save',
                 '6':'export_pdf',
                 '7':'返回查询数据',
+                '8':'发送数据到邮箱',
                 '0':'退出'
                 }
         print('欢迎使用51备忘录'.center(50, '-'))
@@ -173,7 +181,7 @@ class MemoAdmin:
     def query(self): 
         '查询记录'
         if self.memo_list:
-            self.log.info('查询到记录。')
+            self.log.info(f'查询到{len(self.memo_list)}条记录。')
             for k in self.memo_list:
                 a = k['id']
                 b = k['name']
@@ -202,6 +210,40 @@ class MemoAdmin:
             ret['status'] = 1
             ret['statusText'] = e
         return ret
+
+    def send_email(self):
+        smtp = SMTP_SSL("smtp.qq.com")
+        smtp.ehlo("smtp.qq.com")
+        smtp.login("1483204124@qq.com", '')
+        select_data = []
+        info = input('请输入月份或年份：')
+        if info.endswith('年') or info.endswith('月'):
+            if len(info.strip('年').strip('月')) > 2:
+                for item in self.memo_list:
+                    year = parser.parse(item['date']).year
+                    if year == int(info.strip('年').strip('月')):
+                        select_data.append(item)
+            else:
+                for item in self.memo_list:
+                    month = parser.parse(item['date']).month
+                    if month == int(info.strip('年').strip('月')):
+                        select_data.append(item)
+            if select_data:
+                text = ''
+                for item in select_data:
+                    memo_data = str(item['id']) + ' ' + str(item['name']) + ' ' + str(item['thing']) + ' ' + str(item['date']) + '\n'
+                    text += memo_data
+                msg = MIMEText(text, "plain", "utf-8")
+                msg["Subject"] = Header("邮件标题", "utf-8")
+                msg["from"] = "1483204124@qq.com"
+                msg["to"] = "wanshican@163.com"
+                smtp.sendmail("1483204124@qq.com", "wanshican@163.com", msg.as_string())
+                smtp.quit()
+                self.log.info('数据发送成功!')
+            else:
+                self.log.error('未查询到符合要求的数据！')
+        else:
+            self.log.error('请输入正确的查询条件！')
 
 
     def save(self): 
@@ -237,6 +279,8 @@ def main():
                         ma.export_pdf()
                     elif select == '7':
                         ma.query_memo()
+                    elif select == '8':
+                        ma.send_email()
                     elif select == '0':
                         break
                     else:
