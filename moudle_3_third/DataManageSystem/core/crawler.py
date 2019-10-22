@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 import requests
 from requests.exceptions import RequestException
 from bs4 import BeautifulSoup
-import log_function
+from . import log_function
 
 log = log_function.use_log(log_file='spider.log')
 

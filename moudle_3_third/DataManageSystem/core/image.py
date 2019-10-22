@@ -7,7 +7,7 @@ import sys
 import configparser
 from PIL import Image
 from openpyxl import Workbook
-import log_function
+from . import log_function
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
