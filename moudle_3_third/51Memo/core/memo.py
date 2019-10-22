@@ -88,8 +88,8 @@ class MemoAdmin:
         name = input('请输入注册用户名：')
         pwd = input('请输入注册密码：')
         user = {'name': name, 'pwd': pwd}
-        with open(os.path.join(BASE_DIR, 'db', f'{name}.json'), 'wb') as fw:
-            fw.write(pickle.dumps(user))
+        with open(os.path.join(BASE_DIR, 'db', f'{name}.json'), 'w') as fw:
+            json.dump(user, fw)
             self.log.info('注册成功')
         self.config.read(self.config_path)
         self.config.add_section(name)
@@ -266,6 +266,10 @@ class MemoAdmin:
                     menu = json.load(f)
                     for i, m in enumerate(menu):
                         print(i+1, ':', m)
+            elif self.config[self.name].get('type') == 'user':
+                menu = ['memo_operate']
+                for i, m in enumerate(menu):
+                    print(i+3, ':', m)
         except Exception as e:
             print(e)
 
