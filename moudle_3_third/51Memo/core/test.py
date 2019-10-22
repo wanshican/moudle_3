@@ -1,10 +1,36 @@
-import datetime
-import os
-import pickle
+from functools import wraps
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-with open(os.path.join(BASE_DIR, 'db', 'wanshican_memo.pkl'), 'rb') as f:
-    print(os.path.join(BASE_DIR, 'db', 'wanshican_memo.pkl'))
-    memo_list = pickle.loads(f.read())
-    print(memo_list)
+class DecoAnything:
+    def __init__(self, funcname, filename='log-test.txt'):
+        self.filename = filename
+        self.funcname = funcname
+    
+    def __call__(self, func):
+        @wraps(func)
+        def wrapper(*args, **kw):
+            if hasattr(self, self.funcname):
+                myfunc = getattr(self, self.funcname)
+                if(myfunc(func)):
+                    func(*args, **kw)
+        return wrapper   
+
+    def log(self, func):
+        str_log = '函数{}开始运行...'.format(func.__name__)
+        with open(self.filename, 'a', encoding='utf8') as f:
+            print(str_log)
+            f.write(str_log + '\n')
+        return True
+
+    def check(self, func):
+        str_log = '函数{}开始运行...'.format(func.__name__)
+        print(str_log)
+        username = input('username: ')
+        password = input('password: ')
+        if username == 'de8ug' and password == '888':
+            return True
+        else:
+            return False
+
+
+

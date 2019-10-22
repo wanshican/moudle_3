@@ -2,6 +2,7 @@ import pickle
 import os
 import configparser
 import datetime
+import json
 from dateutil import parser
 from functools import wraps
 import smtplib
@@ -16,39 +17,6 @@ import log_function
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-class DecoAnything:
-    def __init__(self, funcname):
-        self.funcname = funcname
-        self.config = configparser.ConfigParser()
-        self.config_path = os.path.join(BASE_DIR, 'conf', 'memo.ini')
-        self.log = log_function.use_log(log_file=os.path.join(BASE_DIR, 'log', 'memo.log'))
-    
-    def __call__(self, func):
-        @wraps(func)
-        def wrapper(*args, **kw):
-            if hasattr(self, self.funcname):
-                myfunc = getattr(self, self.funcname)
-                if(myfunc(func)):
-                    func(*args, **kw)
-        return wrapper 
-  
-    def check(self, func):
-        self.ma = MemoAdmin()
-        username = input('username: ')
-        password = input('password: ')
-        self.config.read(self.config_path)
-        if username not in self.config.sections():
-            print('还未注册，请先注册。')
-        else:
-            with open(self.config[username].get('name_pwd'), 'rb') as f:
-                user_info = pickle.loads(f.read())
-            if user_info['name'] == username and user_info['pwd'] == password:
-                self.log.info('登录成功！')
-                self.ma.name = username
-                return func
-            else:
-                self.log.warning('用户名或密码错误，请重试！')
 
 
 class Memo:
@@ -68,27 +36,40 @@ class MemoAdmin:
         self.config_path = os.path.join(BASE_DIR, 'conf', 'memo.ini')
         self.log = log_function.use_log(log_file=os.path.join(BASE_DIR, 'log', 'memo.log'))
     
-
     def write_config(self):
         '初始化配置文件'
-        data = {'DEFAULT':{'base_dir':os.path.join(BASE_DIR, 'conf'),
-                  'db_type':'pkl',
-                  'name_pwd':os.path.join(BASE_DIR, 'db', 'name_pwd.pkl'),
-                  'memo_list':os.path.join(BASE_DIR, 'db', 'memo_list.pkl')
+        data = {'DEFAULT':{
+                        'base_dir':os.path.join(BASE_DIR, 'conf'),
+                        'type':'user',
+                        'operation':[],
+                        'name_pwd':os.path.join(BASE_DIR, 'db', 'name_pwd.json'),
+                        'memo_list':os.path.join(BASE_DIR, 'db', 'memo_list.json')
+                  },
+                  'admin':{
+                      'base_dir':os.path.join(BASE_DIR, 'conf'),
+                      'type':'admin',
+                      'operation':os.path.join(BASE_DIR, 'db', 'operation.json'),
+                      'name_pwd':os.path.join(BASE_DIR, 'db', 'admin.json'),
+                      'memo_list':os.path.join(BASE_DIR, 'db', 'admin_memo.json')
                   }}
         for k,v in data.items():
             self.config[k] = v
-            
+
         with open(self.config_path, 'w') as f:
             self.config.write(f)
 
+        with open(os.path.join(BASE_DIR, 'db', 'admin.json'), 'w') as fw:
+            json.dump({'name':'admin', 'pwd':'admin'}, fw)
 
-    def load(self):
+        with open(os.path.join(BASE_DIR, 'db', 'operation.json'), 'w') as fw:
+            json.dump(['login', 'register', 'memo_operate', 'crawler', 'office', 'image'], fw)
+   
+    def load(self, username):
         '加载记录'
         self.config.read(self.config_path)
-        if os.path.exists(os.path.join(BASE_DIR, 'db', f'{self.name}_memo.pkl')):
-            with open(self.config[self.name].get('memo_list'), 'rb') as f:
-                self.memo_list = pickle.loads(f.read())
+        if os.path.exists(os.path.join(BASE_DIR, 'db', f'{username}_memo.json')):
+            with open(self.config[username].get('memo_list'), 'r') as f:
+                self.memo_list = json.load(f)
                 self.query()
                 self.log.info('加载成功')
 
@@ -102,34 +83,41 @@ class MemoAdmin:
         except Exception as e:
             print(e)
 
-
     def register(self):
         '注册'
         name = input('请输入注册用户名：')
         pwd = input('请输入注册密码：')
         user = {'name': name, 'pwd': pwd}
-        with open(os.path.join(BASE_DIR, 'db', f'{name}_name.pkl'), 'wb') as fw:
+        with open(os.path.join(BASE_DIR, 'db', f'{name}.json'), 'wb') as fw:
             fw.write(pickle.dumps(user))
             self.log.info('注册成功')
         self.config.read(self.config_path)
         self.config.add_section(name)
-        self.add_config(name, 'name_pwd', os.path.join(BASE_DIR, 'db', f'{name}_name.pkl'))
-        self.add_config(name, 'memo_list', os.path.join(BASE_DIR, 'db', f'{name}_memo.pkl'))
+        self.add_config(name, 'name_pwd', os.path.join(BASE_DIR, 'db', f'{name}.json'))
+        self.add_config(name, 'memo_list', os.path.join(BASE_DIR, 'db', f'{name}_memo.json'))
 
-    @DecoAnything('check')
     def login(self):
-        '登录'
-        self.load()
-        return 'go_on'
+        name = input('请输入用户名：')
+        pwd = input('请输入密码：')
+        self.name = name
+        self.config.read(self.config_path)
+        if name not in self.config.sections():
+            self.log.info('还未注册，请先注册。')
+        else:
+            with open(self.config[name].get('name_pwd'), 'r') as f:
+                user_info = json.load(f)
+            if user_info['name'] == name and user_info['pwd'] == pwd:
+                self.log.info('登录成功！')
+                self.load(name)
+            else:
+                self.log.warning('用户名或密码错误，请重试！')
 
-            
     def export_pdf(self):
         '导出pdf文件'
         with open(os.path.join(BASE_DIR, 'db', 'memo.pdf'), 'w') as f:
             for item in self.memo_list:
                 f.write(str(item['id']) + ' ' + item['name'] + ' ' + item['thing'] + ' ' + item['date'] + '\n')
         self.log.info('导出成功！')
-
 
     def welcome(self):
         '打印选择菜单'
@@ -149,7 +137,6 @@ class MemoAdmin:
         select = input('请选择你的操作选项 (示例 1)：')
         return select
 
-
     def get_id(self):
         if self.memo_list:
             i = 1
@@ -158,7 +145,6 @@ class MemoAdmin:
                 i += 1
         else:
             print('暂无记录，请先添加。')
-
 
     def add(self): 
         '新增记录'
@@ -174,8 +160,7 @@ class MemoAdmin:
         self.memo_list.append(one)
         self.get_id()
         self.log.info('增加成功')
-    
-    
+      
     def dele(self):
         '删除记录'
         try:
@@ -185,7 +170,6 @@ class MemoAdmin:
             self.log.warning('成功删除记录。')
         except IndexError as e:
             print('抱歉，找不到记录，请重试', e)
-
     
     def modify(self):
         '修改记录'
@@ -198,7 +182,6 @@ class MemoAdmin:
         except IndexError as e:
             print('抱歉，找不到记录，请重试', e)
     
-
     def query(self): 
         '查询记录'
         if self.memo_list:
@@ -212,7 +195,6 @@ class MemoAdmin:
         else:
             print('暂无记录，请先添加。')
     
-
     def query_memo(self):
         ret = {'status': 0, 'statusText': '查询成功！', 'data':[]}
         from_month = int(input('请输入起始月份：'))
@@ -266,14 +248,26 @@ class MemoAdmin:
         else:
             self.log.error('请输入正确的查询条件！')
 
-
     def save(self): 
         '保存记录'
-        with open(os.path.join(BASE_DIR, 'db', f'{self.name}_memo.pkl'), 'wb') as f:
-            f.write(pickle.dumps(self.memo_list))
+        with open(os.path.join(BASE_DIR, 'db', f'{self.name}_memo.json'), 'w') as f:
+            json.dump(self.memo_list, f)
             self.log.info('保存成功')
 
-
+    def show_menu(self):
+        try:
+            self.config.read(self.config_path)
+            if self.name not in self.config.sections():
+                menu = ['login', 'register']
+                for i, m in enumerate(menu):
+                    print(i+1, ':', m)
+            elif self.config[self.name].get('type') == 'admin':
+                with open(os.path.join(BASE_DIR, 'db', 'operation.json'), 'r') as f:
+                    menu = json.load(f)
+                    for i, m in enumerate(menu):
+                        print(i+1, ':', m)
+        except Exception as e:
+            print(e)
 
 
 def main():
@@ -281,35 +275,43 @@ def main():
     if not os.path.exists(os.path.join(BASE_DIR, 'conf', 'memo.ini')):
         ma.write_config()
     print('欢迎使用51备忘录，请先登录。')
+    ma.login()
     while True:
-        start = input('1：登录  2：注册  0：退出\n')
-        if start == '1':
-            info = ma.login()
-            if info == 'go_on':
-                while True:
-                    select = ma.welcome()
-                    if select == '1':
-                        ma.add()
-                    elif select == '2':
-                        ma.dele()    
-                    elif select == '3':
-                        ma.modify()
-                    elif select == '4':
-                        ma.query()
-                    elif select == '5':
-                        ma.save()
-                    elif select == '6':
-                        ma.export_pdf()
-                    elif select == '7':
-                        ma.query_memo()
-                    elif select == '8':
-                        ma.send_email()
-                    elif select == '0':
-                        break
-                    else:
-                        break
+        ma.show_menu()
+        start = input('请选择序号（0表示退出）：')
+        if start == '3':
+            while True:
+                select = ma.welcome()
+                if select == '1':
+                    ma.add()
+                elif select == '2':
+                    ma.dele()    
+                elif select == '3':
+                    ma.modify()
+                elif select == '4':
+                    ma.query()
+                elif select == '5':
+                    ma.save()
+                elif select == '6':
+                    ma.export_pdf()
+                elif select == '7':
+                    ma.query_memo()
+                elif select == '8':
+                    ma.send_email()
+                elif select == '0':
+                    break
+                else:
+                    break
+        elif start == '1':
+            ma.login()
         elif start == '2':
             ma.register()
+        elif start == '4':
+            print('开发中...')
+        elif start == '5':
+            print('开发中...')
+        elif start == '6':
+            print('开发中...')
         elif start == '0':
             break
         else:
