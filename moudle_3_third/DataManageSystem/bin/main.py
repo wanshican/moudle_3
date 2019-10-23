@@ -21,12 +21,14 @@ def main():
                 info = admin.login(name)
                 if info == 'sucess':
                     admin.show_menu()
+                    print('4 : 开启权限')
+                    print('5 : 关闭权限')
                 else:
                     continue
             else:
                 info = user.login(name)
                 if info == 'sucess':
-                    user.show_menu()
+                    user.show_menu(name)
                 else:
                     continue
         else:
@@ -41,6 +43,10 @@ def main():
         elif select == '3':
             sourse_dir = input('请输入图片文件目录：')
             image.main(sourse_dir)
+        elif select == 'open':
+            admin.open_authority()
+        elif select == 'shut':
+            admin.shut_authority()
         elif select == 'y':
             user.register()
         elif select == 'n':

@@ -26,12 +26,14 @@ class Admin:
         data = {'DEFAULT':{
                         'base_dir':os.path.join(BASE_DIR, 'conf'),
                         'type':'user',
+                        'enabled':0,
                         'operation':[],
                         'name_pwd':os.path.join(BASE_DIR, 'db', 'name_pwd.json')
                   },
                   'admin':{
                       'base_dir':os.path.join(BASE_DIR, 'conf'),
                       'type':'admin',
+                      'enabled':1,
                       'operation':os.path.join(BASE_DIR, 'db', 'operation.json'),
                       'name_pwd':os.path.join(BASE_DIR, 'db', 'admin.json')
                   }}
@@ -66,16 +68,29 @@ class Admin:
             for i, m in enumerate(menu):
                 print(i+1, ':', m)
 
+    def open_authority(self):
+        username = input('请输入要开启权限的用户名：')
+        self.config.read(self.config_path)
+        self.config.set(username, 'enabled', '1')
+        with open(self.config_path, 'w') as f:
+            self.config.write(f)
+        log_file.warning(f'{username}的数据操作权限已开通。')
+
+    def shut_authority(self):
+        username = input('请输入要关闭权限的用户名：')
+        self.config.read(self.config_path)
+        self.config.set(username, 'enabled', '0')
+        with open(self.config_path, 'w') as f:
+            self.config.write(f)
+        log_file.warning(f'{username}的数据操作权限已关闭。')
+
 
 class User:
     """用户"""
     def __init__(self):
-        self.name = None
-        self.memo_list = []
         self.config = configparser.ConfigParser()
         self.config_path = os.path.join(BASE_DIR, 'conf', 'user_info.ini')
-        # self.log = log_function.use_log(log_file=os.path.join(BASE_DIR, 'log', 'data_manage.log'))
-   
+
     def add_config(self, section, option, value):
         '新增配置文件'
         try:
@@ -110,12 +125,14 @@ class User:
         else:
             log_file.warning('用户名或密码错误，请重试！')
 
-    def show_menu(self):
+    def show_menu(self, username):
         '显示菜单'
-        menu = []
-        if menu:
-            for i, m in enumerate(menu):
-                print(i+1, ':', m)
+        self.config.read(self.config_path)
+        if self.config[username].get('enabled') == '1':
+            with open(os.path.join(BASE_DIR, 'db', 'operation.json'), 'r') as f:
+                menu = json.load(f)
+                for i, m in enumerate(menu):
+                    print(i+1, ':', m)         
         else:
             print('操作菜单授权后可见。')
 
