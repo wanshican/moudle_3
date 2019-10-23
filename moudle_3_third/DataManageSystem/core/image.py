@@ -5,9 +5,9 @@
 import os
 import sys
 import configparser
+import logging
 from PIL import Image
 from openpyxl import Workbook
-from . import log_function
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -19,7 +19,7 @@ class ImageSystem:
         self.target_dir = target_dir
         self.config = configparser.ConfigParser()
         self.config_path = os.path.join(BASE_DIR, 'conf', 'image.ini')
-        self.log = log_function.use_log(log_file=os.path.join(BASE_DIR, 'log', 'image.log'))
+
 
 
     def write_config(self):
@@ -62,9 +62,9 @@ class ImageSystem:
                 sh.cell(row=row, column=1).value = image_info_list[row-2][0]
                 sh.cell(row=row, column=2).value = str(image_info_list[row-2][1][0]) + '*' + str(image_info_list[row-2][1][1])
             wb.save(os.path.join(self.target_dir, 'image_info.xlsx'))
-            self.log.info('图片信息保存成功！')
+            print('图片信息保存成功！')
         else:
-            self.log.error('当前目录没有图片文件，请先添加！')
+            print('当前目录没有图片文件，请先添加！')
 
             
     def resize(self):
@@ -74,10 +74,10 @@ class ImageSystem:
             size = int(input('请输入要裁剪的尺寸（示例：100）：'))
             region = Image.open(os.path.join(self.sourse_dir, name)).crop((0, 0, size, size))
             region.save(os.path.join(self.target_dir, f'resize_{name}'))
-            self.log.info('裁剪成功！')
+            print('裁剪成功！')
         except Exception as e:
             print(e)
-            self.log.warning('未找到图片，请重试！')
+            print('未找到图片，请重试！')
 
     def rotate(self):
         '''旋转图像'''
@@ -86,10 +86,10 @@ class ImageSystem:
             angle = int(input('请输入旋转角度（示例：90）：'))
             result = Image.open(os.path.join(self.sourse_dir, name)).rotate(angle)
             result.save(os.path.join(self.target_dir, f'rotate_{name}'))
-            self.log.info('旋转成功！')
+            print('旋转成功！')
         except Exception as e:
             print(e)
-            self.log.warning('未找到图片，请重试！')
+            print('未找到图片，请重试！')
         
 
 def main(sourse_dir=os.path.join(BASE_DIR, 'db')):

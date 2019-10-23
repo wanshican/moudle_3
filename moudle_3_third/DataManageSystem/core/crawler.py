@@ -2,10 +2,12 @@
 # -*- coding:utf-8 -*-
 # 爬取评论数据，并对差评进行分析
 
+import os
 import json
 import re
 import time
 import csv
+import logging
 import jieba
 import jieba.analyse
 from urllib.parse import urlparse
@@ -13,9 +15,10 @@ from datetime import datetime, timedelta
 import requests
 from requests.exceptions import RequestException
 from bs4 import BeautifulSoup
-from . import log_function
 
-log = log_function.use_log(log_file='spider.log')
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 class Throttle:
     """阀门类，对相同域名的访问添加延迟时间，避免访问过快
@@ -49,11 +52,11 @@ class Downloader:
         self.timeout = timeout
 
     def download(self, url, is_json=False):
-        log.info('下载页面:' + url)
+        print('下载页面:' + url)
         self.throttle.wait(url)
         try:
             response = requests.get(url, headers=self.headers, proxies=self.proxies, timeout=self.timeout)
-            log.info(response.status_code)
+            print(response.status_code)
             if response.status_code == 200:
                 if is_json:
                     return response.json()
@@ -61,11 +64,11 @@ class Downloader:
                     return response.content
             return None
         except RequestException as e:
-            log.error('error:' + e.response)
+            print('error:' + e.response)
             html = ''
             if hasattr(e.response, 'status_code'):
                 code = e.response.status_code
-                log.error('error code:' + code)
+                print('error code:' + code)
                 if self.num_retries > 0 and 500 <= code < 600:
                     # 遇到5XX 的错误就重试
                     html = self.download(url)
@@ -135,7 +138,7 @@ class ItemCommentSpider:
         for page in range(page_start, page_end, page_offset):
             data_list = self.get_comment_by_json(url.format(page))
             all_list += data_list
-            log.info(f'完成第{page_num}页')
+            print(f'完成第{page_num}页')
             page_num += 1
 
         if callback:

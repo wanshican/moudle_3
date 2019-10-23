@@ -7,7 +7,7 @@ import logging
 from dateutil import parser
 from functools import wraps
 
-import log_function, crawler, image, office
+from . import log_function
 
 
 
@@ -145,14 +145,11 @@ def main():
             log_file.info('还未注册，是否注册？(y/n)。')
         select = input('请输入（n表示退出）：')
         if select == '1':
-            url = input('请输入网址：')
-            crawler.main(url)
+            pass
         elif select == '2':
-            sourse_dir = input('请输入图片文件目录：')
-            image.main(sourse_dir)
+            pass
         elif select == '3':
-            name = input('请输入收件人姓名：')
-            office.main(name)
+            pass
         elif select == 'y':
             user.register()
         elif select == 'n':
