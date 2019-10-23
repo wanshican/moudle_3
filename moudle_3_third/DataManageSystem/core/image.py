@@ -92,16 +92,10 @@ class ImageSystem:
             self.log.warning('未找到图片，请重试！')
         
 
-def main():
-    IS = ImageSystem()
+def main(sourse_dir=os.path.join(BASE_DIR, 'db')):
+    IS = ImageSystem(sourse_dir)
     IS.write_config()
-    try:
-        if sys.argv[1] in {'-re', '--resize'}:
-            IS.resize()
-        elif sys.argv[1] in {'-ro', '--rotate'}:
-            IS.rotate()
-    except Exception as e:
-        print(e)
+    IS.resize()
 
 if __name__ == "__main__":
     main()

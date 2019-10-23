@@ -1,8 +1,11 @@
+import os
 from docx import Document
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 class WriteDocx:
     'word操作类，根据不同的输入内容，生成word文件'
-    def __init__(self, name):
+    def __init__(self, name='xxx'):
         self.name = name
         self.doc = Document()
 
@@ -19,11 +22,11 @@ class WriteDocx:
         self.doc.add_paragraph(text)
 
     def save_file(self):
-        self.doc.save(f'{self.name}.docx')
+        self.doc.save(os.path.join(BASE_DIR, 'db', f'{self.name}.docx'))
         print(f'名为{self.name}.docx的文件已成功生成。')
 
-def main():
-    writedocx = WriteDocx('xiaohua')
+def main(name='xxx'):
+    writedocx = WriteDocx(name)
     title = input('请输入标题：')
     subtitle = input('请输入副标题：')
     body = input('请输入正文：')

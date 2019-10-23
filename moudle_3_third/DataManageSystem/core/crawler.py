@@ -175,14 +175,14 @@ class Analysis:
             words[tag] = tag_re.findall(all_text)
         return words
 
-def main():
-    # headers = {
-    #     'User-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36",
-    #     "referer": "https://passport.jd.com"
-    #     } 
-    # spider = ItemCommentSpider(headers=headers)
+def main(url='https://sclub.jd.com/comment/productPageComments.action?productId=100006769698&score=1&sortType=5&page={}&pageSize=10&isShadowSku=0&fold=1'):
+    headers = {
+        'User-agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36",
+        "referer": "https://passport.jd.com"
+        } 
+    spider = ItemCommentSpider(headers=headers)
     # url = 'https://sclub.jd.com/comment/productPageComments.action?productId=100006769698&score=1&sortType=5&page={}&pageSize=10&isShadowSku=0&fold=1'
-    # spider.fetch_data(url, 'db.csv', 0, 30, 1, Recorder('csv'))
+    spider.fetch_data(url, 'db.csv', 0, 30, 1, Recorder('csv'))
 
     data = Analysis('db.csv')
     all_text = data.get_all_text()

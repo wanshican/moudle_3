@@ -7,7 +7,9 @@ import logging
 from dateutil import parser
 from functools import wraps
 
-from . import log_function
+import log_function, crawler, image, office
+
+
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -143,11 +145,14 @@ def main():
             log_file.info('还未注册，是否注册？(y/n)。')
         select = input('请输入（n表示退出）：')
         if select == '1':
-            pass
+            url = input('请输入网址：')
+            crawler.main(url)
         elif select == '2':
-            pass
+            sourse_dir = input('请输入图片文件目录：')
+            image.main(sourse_dir)
         elif select == '3':
-            pass
+            name = input('请输入收件人姓名：')
+            office.main(name)
         elif select == 'y':
             user.register()
         elif select == 'n':
