@@ -155,7 +155,7 @@ def main():
             else:
                 info = user.login(name)
                 if info == 'sucess':
-                    user.show_menu()
+                    user.show_menu(name)
                 else:
                     continue
         else:

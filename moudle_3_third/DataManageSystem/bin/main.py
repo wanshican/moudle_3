@@ -43,9 +43,9 @@ def main():
         elif select == '3':
             sourse_dir = input('请输入图片文件目录：')
             image.main(sourse_dir)
-        elif select == 'open':
+        elif select == '4':
             admin.open_authority()
-        elif select == 'shut':
+        elif select == '5':
             admin.shut_authority()
         elif select == 'y':
             user.register()
